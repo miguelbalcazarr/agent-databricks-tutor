@@ -1,7 +1,7 @@
 import os
 import sqlite3
-from pathlib import Path
 
+from tools.certifications import Certification, get_certification
 from tools.progress_store import get_connection_for_student, get_weak_topics, init_schema as init_progress_schema, record_attempt
 from tools.question_bank import (
     get_connection as get_bank_connection,
@@ -12,24 +12,25 @@ from tools.question_bank import (
 from tools.quiz_engine import grade_answer, pick_question
 
 DEFAULT_LANGUAGE = "es"
+DEFAULT_CERTIFICATION = "databricks-data-engineer-associate"
 
 
-def get_bank_path() -> Path:
-    return Path(os.getenv("QUESTION_BANK_DB", "data/question_bank.db"))
+def get_certification_slug() -> str:
+    return os.getenv("CERTIFICATION", DEFAULT_CERTIFICATION)
 
 
 def get_student_id() -> str:
     return os.getenv("STUDENT_ID", "default")
 
 
-def open_bank() -> sqlite3.Connection:
-    conn = get_bank_connection(get_bank_path())
+def open_bank(cert: Certification) -> sqlite3.Connection:
+    conn = get_bank_connection(cert.question_bank_db_path)
     init_bank_schema(conn)
     return conn
 
 
-def open_progress() -> sqlite3.Connection:
-    conn = get_connection_for_student(get_student_id())
+def open_progress(cert: Certification) -> sqlite3.Connection:
+    conn = get_connection_for_student(get_student_id(), cert.slug)
     init_progress_schema(conn)
     return conn
 
@@ -56,8 +57,9 @@ def answer_question(progress_conn: sqlite3.Connection, question: dict, selected_
 
 
 def main() -> None:
-    bank_conn = open_bank()
-    progress_conn = open_progress()
+    cert = get_certification(get_certification_slug())
+    bank_conn = open_bank(cert)
+    progress_conn = open_progress(cert)
 
     language = os.getenv("QUIZ_LANGUAGE", DEFAULT_LANGUAGE)
     sections = get_available_sections(bank_conn, language=language)

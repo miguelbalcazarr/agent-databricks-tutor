@@ -26,6 +26,8 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from agent.client import generate_question_with_ai  # noqa: E402
+from agent.prompts import build_system_prompt  # noqa: E402
+from tools.certifications import DEFAULT_REGISTRY_PATH, get_certification  # noqa: E402
 from tools.fetch_official_docs import get_doc_text  # noqa: E402
 from tools.parse_exam_guide import Section, load_exam_guide  # noqa: E402
 from tools.question_bank import (  # noqa: E402
@@ -36,14 +38,12 @@ from tools.question_bank import (  # noqa: E402
     validate_question,
 )
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-EXAM_GUIDE_PDF = REPO_ROOT / "databricks-certified-data-engineer-associate-exam-guide-may-2026-000.pdf"
-TOPIC_SOURCES_PATH = REPO_ROOT / "data" / "topic_sources.yaml"
+DEFAULT_CERTIFICATION = "databricks-data-engineer-associate"
 MAX_SOURCE_CHARS = 12_000
 LANGUAGES = ("es", "en")
 
 
-def load_topic_sources(path: Path = TOPIC_SOURCES_PATH) -> dict:
+def load_topic_sources(path: Path) -> dict:
     if not path.exists():
         return {}
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
@@ -72,6 +72,8 @@ def process_objective(
     args: argparse.Namespace,
     topic_sources: dict,
     sample_questions: list[dict],
+    system_prompt: str,
+    doc_source_name: str,
 ) -> bool:
     objective_text = section.objectives[objective_index]
     label = f"seccion={section.number} objetivo={objective_index}"
@@ -109,6 +111,8 @@ def process_objective(
                 source_text=combined_source,
                 sample_questions=sample_questions,
                 language=language,
+                system_prompt=system_prompt,
+                doc_source_name=doc_source_name,
             )
             if parsed is None:
                 print(f"ERROR no se pudo generar (sin OPENAI_API_KEY o fallo el LLM) {lang_label}")
@@ -142,6 +146,10 @@ def process_objective(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--certification", default=DEFAULT_CERTIFICATION,
+        help=f"slug de la certificacion (ver {DEFAULT_REGISTRY_PATH}), default {DEFAULT_CERTIFICATION!r}",
+    )
     parser.add_argument("--section", type=int, help="genera solo para esta seccion (1-7)")
     parser.add_argument("--all", action="store_true", help="genera para todas las secciones/objetivos mapeados")
     parser.add_argument("--count", type=int, default=1, help="preguntas objetivo por (seccion, objetivo)")
@@ -151,19 +159,25 @@ def main() -> None:
     if args.section is None and not args.all:
         parser.error("pasa --section N, o --all")
 
-    guide = load_exam_guide(EXAM_GUIDE_PDF)
+    cert = get_certification(args.certification)
+    system_prompt = build_system_prompt(certification_name=cert.display_name, doc_source_name=cert.doc_source_name)
+
+    guide = load_exam_guide(cert.exam_guide_pdf)
     sections = guide["sections"]
     sample_questions = [asdict(q) for q in guide["sample_questions"]]
-    topic_sources = load_topic_sources()
+    topic_sources = load_topic_sources(cert.topic_sources_path)
 
-    conn = get_connection()
+    conn = get_connection(cert.question_bank_db_path)
     init_schema(conn)
 
     targets = resolve_targets(sections, args.section)
     all_ok = True
     for section, objective_index in targets:
         try:
-            ok = process_objective(conn, section, objective_index, args, topic_sources, sample_questions)
+            ok = process_objective(
+                conn, section, objective_index, args, topic_sources, sample_questions,
+                system_prompt, cert.doc_source_name,
+            )
             all_ok = all_ok and ok
         except Exception as exc:  # surface which objective failed, keep going
             print(f"ERROR seccion={section.number} objetivo={objective_index}: {exc}")

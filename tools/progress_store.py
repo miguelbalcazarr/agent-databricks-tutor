@@ -32,8 +32,10 @@ def get_connection(db_path: Path) -> sqlite3.Connection:
     return conn
 
 
-def get_connection_for_student(student_id: str, progress_dir: Path = DEFAULT_PROGRESS_DIR) -> sqlite3.Connection:
-    return get_connection(progress_dir / f"{student_id}.db")
+def get_connection_for_student(
+    student_id: str, certification_slug: str, progress_dir: Path = DEFAULT_PROGRESS_DIR
+) -> sqlite3.Connection:
+    return get_connection(progress_dir / student_id / f"{certification_slug}.db")
 
 
 def init_schema(conn: sqlite3.Connection) -> None:

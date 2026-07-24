@@ -3,10 +3,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from tools.certifications import get_certification
 from tools.parse_exam_guide import find_objective, load_exam_guide
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-EXAM_GUIDE_PDF = REPO_ROOT / "databricks-certified-data-engineer-associate-exam-guide-may-2026-000.pdf"
+EXAM_GUIDE_PDF = get_certification("databricks-data-engineer-associate").exam_guide_pdf
 
 
 def test_parses_seven_sections_with_weights_summing_to_100():

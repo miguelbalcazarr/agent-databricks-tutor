@@ -217,8 +217,13 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# agent-databricks-tutor: progreso por alumno (local, nunca compartido/versionado)
-data/progress/*.db
+# agent-databricks-tutor: progreso por alumno, ahora anidado por alumno/certificacion (local, nunca compartido/versionado)
+data/progress/
 
 # agent-databricks-tutor: cache de fetch de docs.databricks.com (regenerable, no versionar)
 data/docs_cache/
+
+# agent-databricks-tutor: banco viejo (pre data/certifications/<slug>/), duplicado bloqueado
+# por procesos de Streamlit zombies durante el refactor a multi-certificacion — borrar a mano
+# cuando se puedan cerrar esas terminales (ver docs/contexto/errores-conocidos.md E06)
+/data/question_bank.db

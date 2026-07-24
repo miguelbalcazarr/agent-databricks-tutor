@@ -3,7 +3,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from tools.progress_store import get_connection, get_weak_topics, init_schema, record_attempt
+from tools.progress_store import get_connection, get_connection_for_student, get_weak_topics, init_schema, record_attempt
 
 
 def _make_conn(tmp_path):
@@ -43,3 +43,10 @@ def test_get_weak_topics_orders_by_accuracy_ascending(tmp_path):
     assert weak_topics[0]["accuracy"] == 0.5
     assert weak_topics[1]["accuracy"] == 1.0
     assert weak_topics[0]["attempt_count"] == 2
+
+
+def test_get_connection_for_student_nests_by_student_and_certification(tmp_path):
+    conn = get_connection_for_student("alice", "some-cert", progress_dir=tmp_path)
+    conn.close()
+
+    assert (tmp_path / "alice" / "some-cert.db").exists()

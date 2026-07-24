@@ -2,7 +2,7 @@ import json
 import os
 from urllib import error, request
 
-from agent.prompts import QUESTION_GENERATION_SYSTEM_PROMPT, build_generation_prompt
+from agent.prompts import DEFAULT_DOC_SOURCE_NAME, QUESTION_GENERATION_SYSTEM_PROMPT, build_generation_prompt
 
 
 def generate_question_with_ai(
@@ -13,6 +13,8 @@ def generate_question_with_ai(
     source_text: str,
     sample_questions: list[dict],
     language: str = "es",
+    system_prompt: str = QUESTION_GENERATION_SYSTEM_PROMPT,
+    doc_source_name: str = DEFAULT_DOC_SOURCE_NAME,
 ) -> dict | None:
     """Genera una pregunta grounded via LLM. Retorna None si no hay API key o si falla la
     llamada/parseo — sin fallback heuristico: no tiene sentido inventar una pregunta sin LLM,
@@ -31,11 +33,12 @@ def generate_question_with_ai(
         source_text=source_text,
         sample_questions=sample_questions,
         language=language,
+        doc_source_name=doc_source_name,
     )
     payload = {
         "model": model,
         "messages": [
-            {"role": "system", "content": QUESTION_GENERATION_SYSTEM_PROMPT},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},
         ],
         "temperature": 0.3,

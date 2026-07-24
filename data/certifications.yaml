@@ -1,0 +1,18 @@
+# Registro de certificaciones soportadas por este tutor. Cada entrada define
+# donde vive el material fuente de esa certificacion (exam guide, URLs
+# curadas, banco de preguntas) — ver docs/contexto/decisiones.md D12.
+#
+# `parser` queda reservado para cuando exista una certificacion con un
+# formato de PDF distinto al de Databricks; hoy solo hay un valor posible
+# y tools/parse_exam_guide.py no lo lee todavia (no hay un segundo formato
+# real contra el cual disenar ese dispatch).
+
+certifications:
+  databricks-data-engineer-associate:
+    display_name: "Databricks Certified Data Engineer Associate"
+    vendor: "Databricks"
+    exam_guide_pdf: "data/certifications/databricks-data-engineer-associate/databricks-certified-data-engineer-associate-exam-guide-may-2026-000.pdf"
+    topic_sources: "data/certifications/databricks-data-engineer-associate/topic_sources.yaml"
+    question_bank_db: "data/certifications/databricks-data-engineer-associate/question_bank.db"
+    doc_source_name: "docs.databricks.com"
+    parser: "databricks_v1"
