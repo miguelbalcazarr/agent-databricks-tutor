@@ -190,6 +190,14 @@ def list_sections(conn: sqlite3.Connection, language: str | None = None) -> list
     return [dict(r) for r in rows]
 
 
+def get_questions(conn: sqlite3.Connection, language: str | None = None) -> list[dict]:
+    if language is None:
+        rows = conn.execute("SELECT * FROM questions ORDER BY id").fetchall()
+    else:
+        rows = conn.execute("SELECT * FROM questions WHERE language = ? ORDER BY id", (language,)).fetchall()
+    return [_row_to_dict(r) for r in rows]
+
+
 def list_languages(conn: sqlite3.Connection) -> list[str]:
     rows = conn.execute("SELECT DISTINCT language FROM questions ORDER BY language").fetchall()
     return [row["language"] for row in rows]
