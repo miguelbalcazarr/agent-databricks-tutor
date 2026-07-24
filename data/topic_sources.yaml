@@ -6,19 +6,159 @@
 # oficial (`tools/parse_exam_guide.py::parse_sections`).
 #
 # URLs siempre en su forma canónica /aws/en/... (nunca /azure/en/... —
-# ver docs/contexto/decisiones.md D06). Solo se pre-poblaron 2 objetivos
-# para probar el pipeline de punta a punta; curar el resto es tarea de
-# contenido de Miguel, no de código (ver docs/contexto/estado-proyecto.md).
+# ver docs/contexto/decisiones.md D06).
+#
+# Cobertura: propuesta generada por investigación asistida (búsqueda +
+# verificación de cada URL en docs.databricks.com) para los 33 objetivos
+# del exam guide, 2026-07-24. Pendiente de revisión final de Miguel antes
+# de correr `generate_questions.py --all` sobre todo el banco — ver notas
+# de objetivos flojos más abajo (D06, ver docs/contexto/estado-proyecto.md).
+#
+# Objetivos donde docs.databricks.com no tiene una página que calce del
+# todo (revisar con criterio antes de generar, o aceptar cobertura parcial):
+#   - 2.5: no hay página de comparación real entre métodos de ingesta.
+#   - 2.4: la fuente no cubre la orquestación con Lakeflow Jobs.
+#   - 3.4: la fuente más cercana argumenta contra hardcodear esos parámetros,
+#     no los documenta como referencia directa.
+#   - 6.0/6.1: no hay página sobre metodología de comparar contra baseline
+#     ni "failure rate" como métrica explícita.
+#   - 6.4: contenido de OOM más específico vive en kb.databricks.com,
+#     excluido por regla de solo usar docs.databricks.com (D06).
+#   - 7.1: Unity Catalog no documenta DENY (concepto legacy de Hive
+#     metastore) aunque el objetivo lo menciona explícitamente.
 
 sections:
+  1:  # Databricks Intelligence Platform
+    objectives:
+      0:  # "Understand the core components... architecture, Delta Lake, and Unity Catalog"
+        urls:
+          - https://docs.databricks.com/aws/en/lakehouse/
+          - https://docs.databricks.com/aws/en/introduction/
+      1:  # "Understand Databricks Data Intelligence Platform's compute services..."
+        urls:
+          - https://docs.databricks.com/aws/en/compute/choose-compute
+          - https://docs.databricks.com/aws/en/compute/
+          - https://docs.databricks.com/aws/en/compute/serverless/limitations
   2:  # Data Ingestion and Loading
     objectives:
       0:  # "Enable and detail data ingestion patterns, including batch, streaming..."
         urls:
           - https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader
+      1:  # "Use the COPY INTO command to incrementally load files..."
+        urls:
+          - https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/copy-into/
+      2:  # "Use Auto Loader with schema enforcement and schema evolution..."
+        urls:
+          - https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/
+          - https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema
+      3:  # "Configure Lakeflow Connect to reliably ingest data from diverse enterprise sources..."
+        urls:
+          - https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/
+      4:  # "Use JDBC/ODBC or REST clients in notebooks..." (no cubre orquestación con Jobs, ver nota arriba)
+        urls:
+          - https://docs.databricks.com/aws/en/connect/external-systems/jdbc
+      5:  # "Prioritize between Auto Loader, Lakeflow Connect... based on technical requirements..." (cobertura débil, ver nota arriba)
+        urls:
+          - https://docs.databricks.com/aws/en/ingestion/
+          - https://docs.databricks.com/aws/en/ingestion/overview
+      6:  # "Ingest semi-structured and unstructured data (JSON, nested data) via Lakeflow Connect..."
+        urls:
+          - https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sharepoint-pipeline
+  3:  # Data Transformation and Modeling
+    objectives:
+      0:  # "Implement data cleaning by reading bronze tables with PySpark/SQL..."
+        urls:
+          - https://docs.databricks.com/aws/en/lakehouse/medallion
+      1:  # "Combine DataFrames with operations such as Inner join, left join, broadcast join..."
+        urls:
+          - https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-join
+          - https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-hints
+          - https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-setops
+      2:  # "Manipulate columns, rows, and table structures..."
+        urls:
+          - https://docs.databricks.com/aws/en/pyspark/basics
+          - https://docs.databricks.com/aws/en/pyspark/reference/functions/explode
+      3:  # "Perform data deduplication operations and aggregate operations on DataFrames..."
+        urls:
+          - https://docs.databricks.com/aws/en/pyspark/reference/classes/dataframe/dropDuplicates
+          - https://docs.databricks.com/aws/en/pyspark/reference/functions/approx_count_distinct
+          - https://docs.databricks.com/aws/en/pyspark/reference/classes/dataframe/summary
+      4:  # "Understand the basic tuning parameters..." (fuente débil, ver nota arriba)
+        urls:
+          - https://docs.databricks.com/aws/en/optimizations/aqe
+          - https://docs.databricks.com/aws/en/compute/cluster-config-best-practices
+      5:  # "Understand the difference between, and how to build, Gold layer objects..."
+        urls:
+          - https://docs.databricks.com/aws/en/ldp/best-practices
+          - https://docs.databricks.com/aws/en/ldp/materialized-views
+      6:  # "Apply data quality checks and validation rules..."
+        urls:
+          - https://docs.databricks.com/aws/en/ldp/expectations
+  4:  # Working with Lakeflow Jobs
+    objectives:
+      0:  # "Implement control flows (retries, conditional tasks, branching, looping)..."
+        urls:
+          - https://docs.databricks.com/aws/en/jobs/control-flow
+          - https://docs.databricks.com/aws/en/jobs/for-each
+      1:  # "Configure common tasks (notebook, SQL, dashboard, pipeline) and dependencies..."
+        urls:
+          - https://docs.databricks.com/aws/en/jobs/configure-task
+      2:  # "Implement job schedules... trigger types (scheduled, file arrival, table update)"
+        urls:
+          - https://docs.databricks.com/aws/en/jobs/triggers
+          - https://docs.databricks.com/aws/en/jobs/file-arrival-triggers
+          - https://docs.databricks.com/aws/en/jobs/trigger-table-update
+      3:  # "Choose between time-based and data-driven triggers..."
+        urls:
+          - https://docs.databricks.com/aws/en/jobs/triggers
+  5:  # Implementing CI/CD
+    objectives:
+      0:  # "Manage code development workflow... Git Folders (Repos), branches, commits, PRs"
+        urls:
+          - https://docs.databricks.com/aws/en/repos/
+      1:  # "Environment-specific configuration using Bundle variables and overrides..."
+        urls:
+          - https://docs.databricks.com/aws/en/dev-tools/bundles/variables
+      2:  # "Deploy Declarative Automation Bundles to package/configure/promote Jobs, Pipelines..."
+        urls:
+          - https://docs.databricks.com/aws/en/dev-tools/bundles/
+      3:  # "Understand the Databricks CLI to validate, deploy, manage bundles in CI/CD..."
+        urls:
+          - https://docs.databricks.com/aws/en/dev-tools/cli/bundle-commands
+          - https://docs.databricks.com/aws/en/dev-tools/cli/
   6:  # Troubleshooting, Monitoring, and Optimization
     objectives:
+      0:  # "Identify trends in job performance using run history..." (sin metodología de baseline, ver nota arriba)
+        urls:
+          - https://docs.databricks.com/aws/en/jobs/monitor
+      1:  # "Use the Lakeflow Jobs UI to monitor pipeline health..." (sin "failure rate" explícito, ver nota arriba)
+        urls:
+          - https://docs.databricks.com/aws/en/jobs/monitor
+          - https://docs.databricks.com/aws/en/jobs/repair-job-failures
       2:  # "Identify common performance bottlenecks such as data skew, shuffling..."
         urls:
           - https://docs.databricks.com/aws/en/optimizations/spark-ui-guide
           - https://docs.databricks.com/aws/en/optimizations/aqe
+      3:  # "Understand the features of Liquid Clustering and predictive optimization."
+        urls:
+          - https://docs.databricks.com/aws/en/tables/clustering
+          - https://docs.databricks.com/aws/en/optimizations/predictive-optimization
+      4:  # "Diagnose cluster startup failures, library conflicts, and out-of-memory issues." (OOM débil, ver nota arriba)
+        urls:
+          - https://docs.databricks.com/aws/en/compute/troubleshooting
+          - https://docs.databricks.com/aws/en/compute/cluster-config-best-practices
+  7:  # Governance and Security
+    objectives:
+      0:  # "Differentiate between managed and external tables in Unity Catalog..."
+        urls:
+          - https://docs.databricks.com/aws/en/tables/types
+          - https://docs.databricks.com/aws/en/tables/convert-to-managed
+      1:  # "Configure access controls using the UI and SQL (GRANT, REVOKE, DENY)..." (DENY no documentado, ver nota arriba)
+        urls:
+          - https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges
+      2:  # "Understand column-level masking and row-level security..."
+        urls:
+          - https://docs.databricks.com/aws/en/data-governance/unity-catalog/filters-and-masks
+      3:  # "Understand Unity Catalog ABAC policies..."
+        urls:
+          - https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac
