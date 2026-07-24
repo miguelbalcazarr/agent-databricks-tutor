@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# agent-databricks-tutor: progreso por alumno (local, nunca compartido/versionado)
+data/progress/*.db
+
+# agent-databricks-tutor: cache de fetch de docs.databricks.com (regenerable, no versionar)
+data/docs_cache/

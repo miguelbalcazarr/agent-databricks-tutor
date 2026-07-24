@@ -1,0 +1,24 @@
+# Mapeo (sección, índice de objetivo) -> URLs curadas de docs.databricks.com
+#
+# Clave real: (section_number, objective_index), no el texto del objetivo
+# (ver docs/contexto/decisiones.md D08). Los índices son 0-based, en el
+# mismo orden en que aparecen los bullets de esa sección en el exam guide
+# oficial (`tools/parse_exam_guide.py::parse_sections`).
+#
+# URLs siempre en su forma canónica /aws/en/... (nunca /azure/en/... —
+# ver docs/contexto/decisiones.md D06). Solo se pre-poblaron 2 objetivos
+# para probar el pipeline de punta a punta; curar el resto es tarea de
+# contenido de Miguel, no de código (ver docs/contexto/estado-proyecto.md).
+
+sections:
+  2:  # Data Ingestion and Loading
+    objectives:
+      0:  # "Enable and detail data ingestion patterns, including batch, streaming..."
+        urls:
+          - https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader
+  6:  # Troubleshooting, Monitoring, and Optimization
+    objectives:
+      2:  # "Identify common performance bottlenecks such as data skew, shuffling..."
+        urls:
+          - https://docs.databricks.com/aws/en/optimizations/spark-ui-guide
+          - https://docs.databricks.com/aws/en/optimizations/aqe
