@@ -1,3 +1,4 @@
+import random
 import sys
 from pathlib import Path
 
@@ -111,3 +112,56 @@ def test_pick_exam_questions_filters_by_language(tmp_path):
 
     assert len(questions) == 1
     assert questions[0]["scenario_text"] == "es"
+
+
+def test_pick_exam_questions_allows_up_to_two_per_objective(tmp_path):
+    conn = get_connection(tmp_path / "bank.db")
+    init_schema(conn)
+    for i in range(3):
+        insert_question(
+            conn, section_number=1, section_name="Seccion", objective_index=0,
+            objective_text="obj", scenario_text=f"s{i}", options=["A", "B"],
+            correct_option_index=0, explanation="e", source_urls=[], generation_model="gpt-4o-mini",
+        )
+
+    questions = pick_exam_questions(conn, language="es", count=45, per_objective=2)
+
+    assert len(questions) == 2
+    assert len({q["scenario_text"] for q in questions}) == 2
+
+
+def test_pick_question_biases_toward_weak_sections(tmp_path):
+    conn = get_connection(tmp_path / "bank.db")
+    init_schema(conn)
+    insert_question(
+        conn, section_number=1, section_name="Fuerte", objective_index=0,
+        objective_text="obj", scenario_text="fuerte", options=["A", "B"], correct_option_index=0,
+        explanation="e", source_urls=[], generation_model="gpt-4o-mini",
+    )
+    insert_question(
+        conn, section_number=2, section_name="Debil", objective_index=0,
+        objective_text="obj", scenario_text="debil", options=["A", "B"], correct_option_index=0,
+        explanation="e", source_urls=[], generation_model="gpt-4o-mini",
+    )
+    weak_topics = [
+        {"section_number": 1, "accuracy": 0.95},
+        {"section_number": 2, "accuracy": 0.05},
+    ]
+
+    random.seed(42)
+    picks = [pick_question(conn, weak_topics=weak_topics)["scenario_text"] for _ in range(200)]
+
+    assert picks.count("debil") > picks.count("fuerte")
+
+
+def test_pick_question_uniform_without_weak_topics(tmp_path):
+    conn = get_connection(tmp_path / "bank.db")
+    init_schema(conn)
+    insert_question(
+        conn, section_number=1, section_name="Seccion", objective_index=0,
+        objective_text="obj", scenario_text="s1", options=["A", "B"], correct_option_index=0,
+        explanation="e", source_urls=[], generation_model="gpt-4o-mini",
+    )
+
+    question = pick_question(conn, weak_topics=None)
+    assert question["scenario_text"] == "s1"

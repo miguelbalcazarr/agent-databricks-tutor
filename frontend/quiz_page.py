@@ -26,6 +26,7 @@ def render_quiz(cert: Certification) -> None:
 
     bank_conn = open_bank(cert)
     progress_conn = open_progress(cert)
+    weak_topics = get_weak_topics(progress_conn)
 
     st.title(cert.display_name)
 
@@ -81,20 +82,20 @@ def render_quiz(cert: Certification) -> None:
 
             if st.button("Nueva pregunta", use_container_width=True, key=_k("new_question_button")):
                 st.session_state[_k("current_question")] = pick_question(
-                    bank_conn, chosen_section, language=chosen_language
+                    bank_conn, chosen_section, language=chosen_language,
+                    weak_topics=weak_topics if chosen_section is None else None,
                 )
                 st.session_state[_k("answered")] = False
                 st.session_state[_k("selected_index")] = None
         else:
             chosen_section = None
             st.caption(
-                f"El simulacro toma hasta {EXAM_QUESTION_COUNT} preguntas (una por objetivo, sin repetir) "
-                "y cubre todas las secciones, sin filtro de tema."
+                f"El simulacro toma hasta {EXAM_QUESTION_COUNT} preguntas (hasta 2 por objetivo, "
+                "nunca la misma repetida) y cubre todas las secciones, sin filtro de tema."
             )
 
         st.divider()
         st.header("Tu progreso")
-        weak_topics = get_weak_topics(progress_conn)
         if weak_topics:
             progress_df = pd.DataFrame(weak_topics).set_index("section_number")
             st.bar_chart(progress_df["accuracy"])
@@ -137,7 +138,8 @@ def render_quiz(cert: Certification) -> None:
     def render_practice_mode() -> None:
         if _k("current_question") not in st.session_state:
             st.session_state[_k("current_question")] = pick_question(
-                bank_conn, chosen_section, language=chosen_language
+                bank_conn, chosen_section, language=chosen_language,
+                weak_topics=weak_topics if chosen_section is None else None,
             )
             st.session_state[_k("answered")] = False
             st.session_state[_k("selected_index")] = None
