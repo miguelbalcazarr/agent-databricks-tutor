@@ -25,6 +25,7 @@ class Certification:
     question_bank_db_path: Path
     doc_source_name: str
     parser: str = "databricks_v1"
+    description: str = ""
 
 
 def load_registry(registry_path: Path = DEFAULT_REGISTRY_PATH, base_dir: Path | None = None) -> list[Certification]:
@@ -44,6 +45,7 @@ def load_registry(registry_path: Path = DEFAULT_REGISTRY_PATH, base_dir: Path | 
                 question_bank_db_path=base / fields["question_bank_db"],
                 doc_source_name=fields["doc_source_name"],
                 parser=fields.get("parser", "databricks_v1"),
+                description=fields.get("description", ""),
             )
         )
     return certifications

@@ -11,6 +11,10 @@ certifications:
   databricks-data-engineer-associate:
     display_name: "Databricks Certified Data Engineer Associate"
     vendor: "Databricks"
+    description: >
+      Preparate para el examen oficial: preguntas fundamentadas en la
+      documentacion de Databricks, modo Practica por tema y Simulacro
+      cronometrado igual al examen real.
     exam_guide_pdf: "data/certifications/databricks-data-engineer-associate/databricks-certified-data-engineer-associate-exam-guide-may-2026-000.pdf"
     topic_sources: "data/certifications/databricks-data-engineer-associate/topic_sources.yaml"
     question_bank_db: "data/certifications/databricks-data-engineer-associate/question_bank.db"

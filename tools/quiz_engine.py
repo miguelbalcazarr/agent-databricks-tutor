@@ -11,7 +11,7 @@ from tools.question_bank import get_questions, get_questions_by_section
 
 
 def pick_exam_questions(
-    conn: sqlite3.Connection, language: str, count: int = 45, per_objective: int = 2
+    conn: sqlite3.Connection, language: str, count: int = 50, per_objective: int = 2
 ) -> list[dict]:
     """Selecciona preguntas para un simulacro tipo examen: como maximo
     `per_objective` preguntas distintas por objetivo (nunca la misma
