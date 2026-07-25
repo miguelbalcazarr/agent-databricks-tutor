@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import streamlit as st
 
 from tools.certifications import Certification
@@ -8,6 +10,23 @@ VENDOR_ICONS = {
 }
 DEFAULT_ICON = "🎓"
 CARDS_PER_ROW = 3
+
+
+@dataclass
+class HomeEntry:
+    """Forma generica que el Home necesita para mostrar una tarjeta y
+    enlazar a una pagina — deliberadamente sin nada especifico de
+    certificaciones/quiz, para que agentes con logica totalmente distinta
+    puedan aparecer en el mismo Home sin adoptar el patron de Certification.
+    Ver docs/contexto/decisiones.md D19."""
+
+    slug: str
+    display_name: str
+    category: str
+    description: str
+    icon: str
+    page: st.Page
+    badge: str | None = None
 
 
 def _question_count(cert: Certification) -> int:
@@ -21,30 +40,50 @@ def _question_count(cert: Certification) -> int:
         conn.close()
 
 
-def _render_card(cert: Certification, quiz_pages: dict[str, st.Page]) -> None:
-    with st.container(border=True):
-        icon = VENDOR_ICONS.get(cert.vendor, DEFAULT_ICON)
-        st.markdown(f"#### {icon} {cert.display_name}")
-        st.caption(cert.vendor)
-
-        if cert.description:
-            st.write(cert.description)
-
+def certification_home_entries(
+    certifications: list[Certification], quiz_pages: dict[str, st.Page]
+) -> list[HomeEntry]:
+    """Envuelve cada Certification del registro en un HomeEntry generico —
+    la familia de tutores de certificacion es solo UNA fuente posible de
+    entradas del Home, no la unica (D19)."""
+    entries = []
+    for cert in certifications:
         count = _question_count(cert)
-        if count == 0:
-            st.caption("Banco de preguntas vacio todavia.")
-        else:
-            st.caption(f"📚 {count} preguntas disponibles")
+        badge = f"📚 {count} preguntas disponibles" if count else "Banco de preguntas vacio todavia."
+        entries.append(
+            HomeEntry(
+                slug=cert.slug,
+                display_name=cert.display_name,
+                category=cert.vendor,
+                description=cert.description,
+                icon=VENDOR_ICONS.get(cert.vendor, DEFAULT_ICON),
+                page=quiz_pages[cert.slug],
+                badge=badge,
+            )
+        )
+    return entries
+
+
+def _render_card(entry: HomeEntry) -> None:
+    with st.container(border=True):
+        st.markdown(f"#### {entry.icon} {entry.display_name}")
+        st.caption(entry.category)
+
+        if entry.description:
+            st.write(entry.description)
+
+        if entry.badge:
+            st.caption(entry.badge)
 
         st.page_link(
-            quiz_pages[cert.slug],
+            entry.page,
             label="Entrar",
             icon=":material/arrow_forward:",
             use_container_width=True,
         )
 
 
-def render_home(certifications: list[Certification], quiz_pages: dict[str, st.Page]) -> None:
+def render_home(entries: list[HomeEntry]) -> None:
     st.title("Tutor de Certificaciones")
     st.caption(
         "Practica para tus examenes de certificacion con preguntas fundamentadas "
@@ -52,17 +91,17 @@ def render_home(certifications: list[Certification], quiz_pages: dict[str, st.Pa
     )
     st.divider()
 
-    for row_start in range(0, len(certifications), CARDS_PER_ROW):
-        row = certifications[row_start : row_start + CARDS_PER_ROW]
+    for row_start in range(0, len(entries), CARDS_PER_ROW):
+        row = entries[row_start : row_start + CARDS_PER_ROW]
         columns = st.columns(CARDS_PER_ROW)
-        for column, cert in zip(columns, row):
+        for column, entry in zip(columns, row):
             with column:
-                _render_card(cert, quiz_pages)
+                _render_card(entry)
 
 
-def make_home_page(certifications: list[Certification], quiz_pages: dict[str, st.Page]) -> st.Page:
+def make_home_page(entries: list[HomeEntry]) -> st.Page:
     return st.Page(
-        lambda: render_home(certifications, quiz_pages),
+        lambda: render_home(entries),
         title="Inicio",
         icon=":material/home:",
         url_path="home",
