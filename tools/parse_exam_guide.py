@@ -7,22 +7,9 @@ outline bullets verbatim (in English) — see docs/contexto/decisiones.md D08.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
 from pathlib import Path
 
-import pypdf
-
-_LIGATURES = {
-    "ﬁ": "fi",
-    "ﬂ": "fl",
-    "‑": "-",
-    "–": "-",
-    "—": "-",
-    "‘": "'",
-    "’": "'",
-    "“": '"',
-    "”": '"',
-}
+from tools.exam_guide_common import Section, SampleQuestion, collapse_whitespace, extract_text
 
 _SECTION_HEADER = re.compile(r"Section (\d+): (.+?) \((\d+)%\)")
 _BULLET = re.compile(r"●\s*(.*?)(?=●|\Z)", re.DOTALL)
@@ -33,39 +20,6 @@ _OPTION = re.compile(r"([A-D])\.\s*(.*?)(?=\n?[A-D]\.\s|\Z)", re.DOTALL)
 _ANSWER_LINE = re.compile(r"(\d+)\.\s*([A-D])")
 
 
-@dataclass
-class Section:
-    number: int
-    name: str
-    weight_pct: int
-    objectives: list[str]  # verbatim English text, order = objective_index
-
-
-@dataclass
-class SampleQuestion:
-    number: int
-    objective_text: str
-    scenario: str
-    options: list[str]
-    correct_index: int
-
-
-def _normalize(text: str) -> str:
-    for bad, good in _LIGATURES.items():
-        text = text.replace(bad, good)
-    return text
-
-
-def _collapse_whitespace(text: str) -> str:
-    return re.sub(r"\s+", " ", text).strip()
-
-
-def extract_text(pdf_path: Path) -> str:
-    reader = pypdf.PdfReader(pdf_path)
-    pages = [page.extract_text(extraction_mode="layout") for page in reader.pages]
-    return _normalize("\n===PAGE_BREAK===\n".join(pages))
-
-
 def parse_sections(text: str) -> list[Section]:
     outline_text = text[text.index("Exam outline"):text.index("Sample Questions")]
     matches = list(_SECTION_HEADER.finditer(outline_text))
@@ -74,7 +28,7 @@ def parse_sections(text: str) -> list[Section]:
         start = m.end()
         end = matches[i + 1].start() if i + 1 < len(matches) else len(outline_text)
         block = outline_text[start:end]
-        objectives = [_collapse_whitespace(b) for b in _BULLET.findall(block)]
+        objectives = [collapse_whitespace(b) for b in _BULLET.findall(block)]
         sections.append(Section(
             number=int(m.group(1)),
             name=m.group(2).strip(),
@@ -98,17 +52,17 @@ def parse_sample_questions(text: str) -> list[SampleQuestion]:
         body = qm.group(2)
 
         objective_match = _OBJECTIVE.search(body)
-        objective_text = _collapse_whitespace(objective_match.group(1))
+        objective_text = collapse_whitespace(objective_match.group(1))
 
         rest = body[objective_match.end():]
         options_start = _OPTION_START.search(rest)
-        scenario = _collapse_whitespace(rest[:options_start.start()])
+        scenario = collapse_whitespace(rest[:options_start.start()])
         options_text = rest[options_start.start():]
 
         letters, texts = [], []
         for letter, option_text in _OPTION.findall(options_text):
             letters.append(letter)
-            texts.append(_collapse_whitespace(option_text))
+            texts.append(collapse_whitespace(option_text))
 
         correct_letter = answer_key[number]
         questions.append(SampleQuestion(

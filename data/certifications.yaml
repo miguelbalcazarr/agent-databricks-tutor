@@ -2,10 +2,11 @@
 # donde vive el material fuente de esa certificacion (exam guide, URLs
 # curadas, banco de preguntas) — ver docs/contexto/decisiones.md D12.
 #
-# `parser` queda reservado para cuando exista una certificacion con un
-# formato de PDF distinto al de Databricks; hoy solo hay un valor posible
-# y tools/parse_exam_guide.py no lo lee todavia (no hay un segundo formato
-# real contra el cual disenar ese dispatch).
+# `parser` selecciona, via tools/exam_guide_parsers.py, que funcion de
+# parseo usar para el exam_guide_pdf de esa certificacion — cada formato de
+# PDF distinto (por vendor) tiene su propio modulo bajo tools/
+# (parse_exam_guide.py para Databricks, parse_exam_guide_microsoft.py para
+# el "Study Guide" de Microsoft).
 
 certifications:
   databricks-data-engineer-associate:
@@ -20,3 +21,16 @@ certifications:
     question_bank_db: "data/certifications/databricks-data-engineer-associate/question_bank.db"
     doc_source_name: "docs.databricks.com"
     parser: "databricks_v1"
+
+  dp-700-fabric-data-engineer:
+    display_name: "Microsoft Certified: Fabric Data Engineer Associate (DP-700)"
+    vendor: "Microsoft"
+    description: >
+      Preparate para el examen oficial: preguntas fundamentadas en la
+      documentacion de Microsoft Fabric, modo Practica por tema y Simulacro
+      cronometrado igual al examen real.
+    exam_guide_pdf: "data/certifications/dp-700-fabric-data-engineer/dp-700-study-guide-2026-07.pdf"
+    topic_sources: "data/certifications/dp-700-fabric-data-engineer/topic_sources.yaml"
+    question_bank_db: "data/certifications/dp-700-fabric-data-engineer/question_bank.db"
+    doc_source_name: "learn.microsoft.com"
+    parser: "microsoft_study_guide_v1"

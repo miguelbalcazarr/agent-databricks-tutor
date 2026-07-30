@@ -28,8 +28,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from agent.client import generate_question_with_ai  # noqa: E402
 from agent.prompts import build_system_prompt  # noqa: E402
 from tools.certifications import DEFAULT_REGISTRY_PATH, get_certification  # noqa: E402
+from tools.exam_guide_common import Section  # noqa: E402
+from tools.exam_guide_parsers import load_exam_guide_for  # noqa: E402
 from tools.fetch_official_docs import get_doc_text  # noqa: E402
-from tools.parse_exam_guide import Section, load_exam_guide  # noqa: E402
 from tools.question_bank import (  # noqa: E402
     count_questions_for_objective,
     get_connection,
@@ -162,7 +163,7 @@ def main() -> None:
     cert = get_certification(args.certification)
     system_prompt = build_system_prompt(certification_name=cert.display_name, doc_source_name=cert.doc_source_name)
 
-    guide = load_exam_guide(cert.exam_guide_pdf)
+    guide = load_exam_guide_for(cert)
     sections = guide["sections"]
     sample_questions = [asdict(q) for q in guide["sample_questions"]]
     topic_sources = load_topic_sources(cert.topic_sources_path)
