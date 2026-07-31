@@ -2,9 +2,9 @@ from datetime import datetime, timedelta, timezone
 
 import pandas as pd
 import streamlit as st
-import streamlit.components.v1 as components
 
 from app import answer_question, get_available_languages, get_available_sections, open_bank, open_progress
+from frontend.home import DEFAULT_LANGUAGE, GLOBAL_LANGUAGE_KEY, LANGUAGE_LABELS
 from tools.certifications import Certification
 from tools.progress_store import (
     get_exam_attempt_answers,
@@ -16,7 +16,6 @@ from tools.progress_store import (
 from tools.question_bank import get_question
 from tools.quiz_engine import pick_exam_questions, pick_question
 
-LANGUAGE_LABELS = {"es": "Español", "en": "English"}
 EXAM_QUESTION_COUNT = 50
 EXAM_DURATION = timedelta(minutes=90)
 PASSING_THRESHOLD = 0.80
@@ -30,11 +29,14 @@ def render_quiz(cert: Certification) -> None:
     visitar la pagina de otra). Ver docs/contexto/decisiones.md D12.
 
     El flujo tiene dos etapas (`_k("stage")`, D17): "select" (pantalla de
-    entrada: elegir modo + idioma, con el contexto de cada modo explicado)
-    y "active" (la practica/simulacro en si, igual que antes). Una vez en
-    "active" se puede volver a "select" sin perder un simulacro en curso —
-    el dict de examen vive en su propia clave de sesion, independiente del
-    modo/idioma elegidos (mismo desacople que D11)."""
+    entrada: elegir modo, con el contexto de cada modo explicado) y "active"
+    (la practica/simulacro en si, igual que antes). Una vez en "active" se
+    puede volver a "select" sin perder un simulacro en curso — el dict de
+    examen vive en su propia clave de sesion, independiente del modo elegido
+    (mismo desacople que D11). El idioma NO se elige aca — es una preferencia
+    global elegida una sola vez en el Home (`GLOBAL_LANGUAGE_KEY`, D21), esta
+    funcion solo la lee y cae al primer idioma disponible si esta
+    certificacion todavia no tiene preguntas en el idioma elegido."""
 
     def _k(name: str) -> str:
         return f"{cert.slug}::{name}"
@@ -56,17 +58,15 @@ def render_quiz(cert: Certification) -> None:
     def render_mode_selector() -> None:
         st.write("Elegi como queres practicar hoy.")
 
-        default_language = st.session_state.get(_k("language"), available_languages[0])
-        default_index = (
-            available_languages.index(default_language) if default_language in available_languages else 0
-        )
-        chosen = st.selectbox(
-            "Idioma para empezar",
-            options=available_languages,
-            index=default_index,
-            format_func=lambda lang: LANGUAGE_LABELS.get(lang, lang),
-            key=_k("intro_language_widget"),
-        )
+        global_language = st.session_state.get(GLOBAL_LANGUAGE_KEY, DEFAULT_LANGUAGE)
+        chosen = global_language if global_language in available_languages else available_languages[0]
+        if global_language not in available_languages:
+            st.caption(
+                f"Esta certificacion todavia no tiene preguntas en "
+                f"{LANGUAGE_LABELS.get(global_language, global_language)} — se usa "
+                f"{LANGUAGE_LABELS.get(chosen, chosen)} por ahora. Podes cambiar el idioma "
+                "desde el Inicio."
+            )
 
         def enter_active_stage(modo: str) -> None:
             if st.session_state.get(_k("language")) != chosen:
@@ -171,7 +171,7 @@ def render_quiz(cert: Certification) -> None:
         """Cronometro visual client-side (no fuerza reruns de Streamlit). El
         cumplimiento real del limite de tiempo se revisa server-side en cada
         rerun comparando contra `start_time` — ver docs/contexto/decisiones.md D11."""
-        components.html(
+        st.iframe(
             f"""
             <div id="timer" style="font-size:1.6em;font-weight:bold;text-align:right;
                  font-family:sans-serif;color:#444;"></div>
@@ -217,15 +217,25 @@ def render_quiz(cert: Certification) -> None:
             format_func=lambda i: f"{chr(65 + i)}. {question['options'][i]}",
             index=None,
             disabled=st.session_state[_k("answered")],
-            key=_k("practice_radio"),
+            # key incluye el id de la pregunta: sin esto, "Nueva pregunta" reutiliza
+            # la key fija del widget anterior y Streamlit arrastra la seleccion vieja
+            # a una pregunta distinta en vez de arrancar sin nada elegido.
+            key=_k(f"practice_radio_{question['id']}"),
         )
 
         if not st.session_state[_k("answered")]:
             if st.button("Responder", disabled=selected_label is None, key=_k("answer_button")):
-                answer_question(progress_conn, question, selected_label)
-                st.session_state[_k("answered")] = True
-                st.session_state[_k("selected_index")] = selected_label
-                st.rerun()
+                # Guarda de servidor ademas del `disabled` del boton (que depende del
+                # cliente/navegador): sin seleccionar nada, no se llama a answer_question
+                # — evita el sqlite3.IntegrityError de attempts.selected_option_index
+                # (NOT NULL) si el click llega a registrarse igual.
+                if selected_label is not None:
+                    answer_question(progress_conn, question, selected_label)
+                    st.session_state[_k("answered")] = True
+                    st.session_state[_k("selected_index")] = selected_label
+                    st.rerun()
+                else:
+                    st.warning("Elegi una opcion antes de responder.")
         else:
             is_correct = st.session_state[_k("selected_index")] == question["correct_option_index"]
             if is_correct:

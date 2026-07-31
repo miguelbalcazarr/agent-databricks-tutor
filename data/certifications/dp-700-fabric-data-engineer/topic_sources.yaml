@@ -1,0 +1,263 @@
+# Mapeo (sección, índice de objetivo) -> URLs curadas de learn.microsoft.com
+#
+# Clave real: (section_number, objective_index), no el texto del objetivo
+# (mismo patrón que topic_sources.yaml de Databricks — ver
+# docs/contexto/decisiones.md D08). Los índices son 0-based, en el mismo
+# orden en que aparecen los bullets de esa sección en el exam guide oficial
+# (`tools/parse_exam_guide_microsoft.py`). El texto de cada objetivo incluye
+# el prefijo de subgrupo (ej. "Configure security and governance: Implement
+# dynamic data masking") — ver docs/contexto/decisiones.md D20.
+#
+# Cobertura: propuesta generada por investigación asistida (4 agentes en
+# paralelo + investigación puntual para 2 objetivos que quedaron sin
+# asignar en el primer reparto) para los 54 objetivos del exam guide de
+# DP-700, 2026-07-31. Cada URL fue verificada (WebFetch / Microsoft Learn
+# MCP `microsoft_docs_search`+`microsoft_docs_fetch`) antes de incluirse.
+# Pendiente de revisión final de Miguel antes de correr
+# `generate_questions.py --certification dp-700-fabric-data-engineer --all`
+# — ver notas de objetivos con cobertura floja más abajo.
+#
+# Objetivos donde learn.microsoft.com no tiene una página que calce del
+# todo con el bullet exacto del exam guide (revisar con criterio antes de
+# generar, o aceptar cobertura parcial):
+#   - 1.2 (OneLake workspace settings): no hay una página única "OneLake
+#     workspace settings" — el tab de settings agrupa varias features
+#     distintas (lifecycle management, diagnostics, etc.); se combinaron
+#     las dos más sustanciales.
+#   - 1.9 (row/column/object/folder-file level access controls): no hay
+#     una página que cubra las 4 granularidades bajo un mismo heading
+#     estilo exam guide — se combinó la doc general de OneLake con la
+#     específica de Warehouse.
+#   - 1.15 (Dataflow gen 2 vs pipeline vs notebook): las guías de decisión
+#     reales de Microsoft comparan un set más amplio de herramientas
+#     (Copy activity/Copy job/Dataflow/Eventstream/Spark), no exactamente
+#     "Dataflow Gen2 vs pipeline vs notebook" como lo frasea el exam guide.
+#   - 2.4 (Dataflows Gen2 vs notebooks vs KQL vs T-SQL): ninguna página
+#     única compara las 4 opciones — se combinaron dos guías de decisión,
+#     ninguna trata KQL/T-SQL como opciones de primera clase igual que
+#     Dataflow Gen2/notebooks.
+#   - 2.8 (transformar con PySpark, SQL y KQL): PySpark/SQL bien cubiertos
+#     por un tutorial de Lakehouse; KQL tuvo que sacarse de un how-to de
+#     creación de queryset, no de un tutorial de transformación dedicado.
+#   - 2.11 (duplicados, datos faltantes, datos que llegan tarde): no hay
+#     una página única de calidad de datos para batch — se combinó un
+#     tutorial de Data Wrangler (duplicados/missing, contexto data
+#     science) con la doc de Activator (late-arrival tolerance, contexto
+#     real-time) porque no existe un equivalente directo en Data Factory.
+#   - 2.17 (procesar con KQL, streaming): la página elegida documenta el
+#     uso genérico de un KQL queryset, no un tutorial específico de
+#     streaming con KQL.
+#   - 2.18 (windowing functions): no existe una página dedicada a
+#     "windowing functions en Fabric" — se combinó el operador SQL de
+#     Eventstream (TumblingWindow/HoppingWindow, Fabric-específico) con el
+#     artículo genérico de Azure Stream Analytics.
+#   - 3.7 (errores de Eventhouse): no hay guía de troubleshooting dedicada
+#     — se usó la página de "Manage and monitor an eventhouse" (sección
+#     System overview), que documenta estados de error pero no es una
+#     guía de troubleshooting como las de pipelines/notebooks/warehouse.
+#   - 3.10 (errores de shortcuts de OneLake): no hay una guía única de
+#     troubleshooting de shortcuts — se combinó un bullet genérico de la
+#     guía de Spark con una guía específica de errores de shortcuts en
+#     modo delegado del SQL analytics endpoint.
+
+sections:
+  1:  # Implement and manage an analytics solution (30-35%)
+    objectives:
+      0:  # "Configure Microsoft Fabric workspace settings: Configure Spark workspace settings"
+        urls:
+          - https://learn.microsoft.com/fabric/data-engineering/workspace-admin-settings
+          - https://learn.microsoft.com/fabric/data-engineering/spark-admin-settings-faq
+      1:  # "Configure Microsoft Fabric workspace settings: Configure domain workspace settings"
+        urls:
+          - https://learn.microsoft.com/fabric/governance/domains
+      2:  # "Configure Microsoft Fabric workspace settings: Configure OneLake workspace settings" (cobertura floja, ver nota)
+        urls:
+          - https://learn.microsoft.com/fabric/onelake/onelake-lifecycle-management
+          - https://learn.microsoft.com/fabric/onelake/onelake-diagnostics-overview
+      3:  # "Configure Microsoft Fabric workspace settings: Configure Apache Airflow workspace settings"
+        urls:
+          - https://learn.microsoft.com/fabric/data-factory/apache-airflow-jobs-workspace-settings
+      4:  # "Implement lifecycle management in Fabric: Configure version control"
+        urls:
+          - https://learn.microsoft.com/fabric/cicd/git-integration/intro-to-git-integration
+      5:  # "Implement lifecycle management in Fabric: Implement database projects"
+        urls:
+          - https://learn.microsoft.com/fabric/data-warehouse/develop-warehouse-project
+          - https://learn.microsoft.com/fabric/data-warehouse/source-control
+      6:  # "Implement lifecycle management in Fabric: Create and configure deployment pipelines"
+        urls:
+          - https://learn.microsoft.com/fabric/cicd/deployment-pipelines/get-started-with-deployment-pipelines
+      7:  # "Configure security and governance: Implement workspace-level access controls"
+        urls:
+          - https://learn.microsoft.com/fabric/fundamentals/roles-workspaces
+      8:  # "Configure security and governance: Implement item-level access controls"
+        urls:
+          - https://learn.microsoft.com/fabric/fundamentals/share-items
+          - https://learn.microsoft.com/fabric/security/permission-model
+      9:  # "Configure security and governance: Implement row-level, column-level, object-level, and folder/file-level access controls" (cobertura floja, ver nota)
+        urls:
+          - https://learn.microsoft.com/fabric/onelake/security/table-column-row-security
+          - https://learn.microsoft.com/fabric/data-warehouse/security
+      10:  # "Configure security and governance: Implement dynamic data masking"
+        urls:
+          - https://learn.microsoft.com/fabric/data-warehouse/dynamic-data-masking
+          - https://learn.microsoft.com/fabric/data-warehouse/howto-dynamic-data-masking
+      11:  # "Configure security and governance: Apply sensitivity labels to items"
+        urls:
+          - https://learn.microsoft.com/fabric/fundamentals/apply-sensitivity-labels
+      12:  # "Configure security and governance: Endorse items"
+        urls:
+          - https://learn.microsoft.com/fabric/fundamentals/endorsement-promote-certify
+          - https://learn.microsoft.com/fabric/governance/endorsement-overview
+      13:  # "Configure security and governance: Implement and use Microsoft Fabric audit logs"
+        urls:
+          - https://learn.microsoft.com/fabric/admin/track-user-activities
+      14:  # "Configure security and governance: Configure and implement OneLake security"
+        urls:
+          - https://learn.microsoft.com/fabric/onelake/security/get-started-onelake-security
+          - https://learn.microsoft.com/fabric/onelake/security/create-manage-roles
+      15:  # "Orchestrate processes: Choose between Dataflow gen 2, a pipeline and a notebook" (cobertura floja, ver nota)
+        urls:
+          - https://learn.microsoft.com/fabric/fundamentals/decision-guide-pipeline-dataflow-spark
+          - https://learn.microsoft.com/fabric/data-factory/decision-guide-data-integration
+      16:  # "Orchestrate processes: Design and implement schedules and event-based triggers"
+        urls:
+          - https://learn.microsoft.com/fabric/data-factory/pipeline-runs
+      17:  # "Orchestrate processes: Implement orchestration patterns with notebooks and pipelines, including parameters and dynamic expressions"
+        urls:
+          - https://learn.microsoft.com/fabric/data-factory/parameters
+          - https://learn.microsoft.com/fabric/data-engineering/notebookutils/notebookutils-notebook-run
+
+  2:  # Ingest and transform data (30-35%)
+    objectives:
+      0:  # "Design and implement loading patterns: Design and implement full and incremental data loads"
+        urls:
+          - https://learn.microsoft.com/fabric/data-factory/what-is-copy-job
+          - https://learn.microsoft.com/fabric/data-factory/incremental-copy-job
+      1:  # "Design and implement loading patterns: Prepare data for loading into a dimensional model"
+        urls:
+          - https://learn.microsoft.com/fabric/data-warehouse/dimensional-modeling-overview
+          - https://learn.microsoft.com/fabric/data-warehouse/dimensional-modeling-load-tables
+      2:  # "Design and implement loading patterns: Design and implement a loading pattern for streaming data"
+        urls:
+          - https://learn.microsoft.com/fabric/real-time-intelligence/event-streams/overview
+          - https://learn.microsoft.com/fabric/real-time-intelligence/eventhouse
+      3:  # "Ingest and transform batch data: Choose an appropriate data store"
+        urls:
+          - https://learn.microsoft.com/fabric/fundamentals/decision-guide-data-store
+          - https://learn.microsoft.com/fabric/fundamentals/decision-guide-lakehouse-warehouse
+      4:  # "Ingest and transform batch data: Choose between Dataflows Gen2, notebooks, KQL, and T-SQL for data transformation" (cobertura floja, ver nota)
+        urls:
+          - https://learn.microsoft.com/fabric/fundamentals/decision-guide-pipeline-dataflow-spark
+          - https://learn.microsoft.com/fabric/fundamentals/prepare-transform-data
+      5:  # "Ingest and transform batch data: Create and manage OneLake shortcuts"
+        urls:
+          - https://learn.microsoft.com/fabric/onelake/onelake-shortcuts
+          - https://learn.microsoft.com/fabric/onelake/shortcuts/create-onelake-shortcut
+      6:  # "Ingest and transform batch data: Implement mirroring"
+        urls:
+          - https://learn.microsoft.com/fabric/mirroring/overview
+          - https://learn.microsoft.com/fabric/mirroring/azure-sql-database-tutorial
+      7:  # "Ingest and transform batch data: Ingest data by using pipelines"
+        urls:
+          - https://learn.microsoft.com/fabric/data-factory/copy-data-activity
+          - https://learn.microsoft.com/fabric/data-warehouse/ingest-data-pipelines
+      8:  # "Ingest and transform batch data: Transform data by using PySpark, SQL, and KQL" (cobertura floja, ver nota)
+        urls:
+          - https://learn.microsoft.com/fabric/data-engineering/tutorial-lakehouse-data-preparation
+          - https://learn.microsoft.com/fabric/real-time-intelligence/create-query-set
+      9:  # "Ingest and transform batch data: Denormalize data"
+        urls:
+          - https://learn.microsoft.com/fabric/data-warehouse/dimensional-modeling-dimension-tables
+      10:  # "Ingest and transform batch data: Group and aggregate data"
+        urls:
+          - https://learn.microsoft.com/fabric/data-factory/create-first-dataflow-gen2#apply-transformations-and-publish
+          - https://learn.microsoft.com/fabric/data-factory/dataflow-gen2-mapping-data-flows-transforms#supported-transformations
+      11:  # "Ingest and transform batch data: Handle duplicate, missing, and late-arriving data" (cobertura floja, ver nota)
+        urls:
+          - https://learn.microsoft.com/fabric/data-science/tutorial-data-science-explore-notebook#drop-duplicate-rows
+          - https://learn.microsoft.com/fabric/real-time-intelligence/data-activator/activator-latency#late-arrival-tolerance-setting
+      12:  # "Ingest and transform streaming data: Choose an appropriate streaming engine"
+        urls:
+          - https://learn.microsoft.com/fabric/real-time-intelligence/get-started-with-real-time-intelligence
+          - https://learn.microsoft.com/azure/architecture/data-guide/technology-choices/stream-processing
+      13:  # "Ingest and transform streaming data: Choose between native tables and OneLake shortcuts in Real-Time Intelligence"
+        urls:
+          - https://learn.microsoft.com/fabric/real-time-intelligence/onelake-shortcuts
+          - https://learn.microsoft.com/fabric/real-time-intelligence/eventhouse
+      14:  # "Ingest and transform streaming data: Choose between Query acceleration for OneLake shortcuts and standard OneLake shortcuts in Real-Time Intelligence"
+        urls:
+          - https://learn.microsoft.com/fabric/real-time-intelligence/query-acceleration-overview
+      15:  # "Ingest and transform streaming data: Process data by using Eventstreams"
+        urls:
+          - https://learn.microsoft.com/fabric/real-time-intelligence/event-streams/overview
+      16:  # "Ingest and transform streaming data: Process data by using Spark structured streaming"
+        urls:
+          - https://learn.microsoft.com/fabric/data-engineering/structured-streaming-overview
+      17:  # "Ingest and transform streaming data: Process data by using KQL" (cobertura floja, ver nota)
+        urls:
+          - https://learn.microsoft.com/fabric/real-time-intelligence/kusto-query-set
+      18:  # "Ingest and transform streaming data: Create windowing functions" (cobertura floja, ver nota)
+        urls:
+          - https://learn.microsoft.com/fabric/real-time-intelligence/event-streams/process-events-using-sql-code-editor
+          - https://learn.microsoft.com/stream-analytics-query/windowing-azure-stream-analytics
+
+  3:  # Monitor and optimize an analytics solution (30-35%)
+    objectives:
+      0:  # "Monitor Fabric items: Monitor data ingestion"
+        urls:
+          - https://learn.microsoft.com/fabric/data-factory/monitor-pipeline-runs
+          - https://learn.microsoft.com/fabric/admin/monitoring-hub
+      1:  # "Monitor Fabric items: Monitor data transformation"
+        urls:
+          - https://learn.microsoft.com/fabric/data-factory/dataflows-gen2-monitor
+      2:  # "Monitor Fabric items: Monitor semantic model refresh"
+        urls:
+          - https://learn.microsoft.com/power-bi/connect-data/refresh-data#semantic-model-refresh-history
+      3:  # "Monitor Fabric items: Configure alerts"
+        urls:
+          - https://learn.microsoft.com/fabric/data-factory/create-alerts-for-pipeline-runs
+      4:  # "Identify and resolve errors: Identify and resolve pipeline errors"
+        urls:
+          - https://learn.microsoft.com/fabric/data-factory/pipeline-troubleshoot-guide
+      5:  # "Identify and resolve errors: Identify and resolve Dataflow Gen2 errors"
+        urls:
+          - https://learn.microsoft.com/fabric/data-factory/dataflow-gen2-data-destinations-validation-rules#troubleshooting-validation-errors
+      6:  # "Identify and resolve errors: Identify and resolve notebook errors"
+        urls:
+          - https://learn.microsoft.com/fabric/data-science/fabric-notebooks-troubleshooting-guide
+      7:  # "Identify and resolve errors: Identify and resolve Eventhouse errors" (cobertura floja, ver nota)
+        urls:
+          - https://learn.microsoft.com/fabric/real-time-intelligence/manage-monitor-eventhouse#system-overview
+      8:  # "Identify and resolve errors: Identify and resolve Eventstream errors"
+        urls:
+          - https://learn.microsoft.com/fabric/real-time-intelligence/event-streams/monitor#runtime-logs
+          - https://learn.microsoft.com/fabric/real-time-intelligence/event-streams/fabric-workspace-monitoring-tables#eventstreamerrormetrics
+      9:  # "Identify and resolve errors: Identify and resolve T-SQL errors"
+        urls:
+          - https://learn.microsoft.com/fabric/data-warehouse/troubleshoot-ingestion-errors
+          - https://learn.microsoft.com/fabric/data-warehouse/troubleshoot-fabric-data-warehouse
+      10:  # "Identify and resolve errors: Identify and resolve OneLake shortcut errors" (cobertura floja, ver nota)
+        urls:
+          - https://learn.microsoft.com/fabric/data-engineering/troubleshoot-spark#file-and-path-errors
+          - https://learn.microsoft.com/fabric/onelake/security/troubleshoot-onelake-security-for-sql-analytics-endpoints#shortcut-query-fails-in-delegated-mode
+      11:  # "Optimize performance: Optimize a Lakehouse table"
+        urls:
+          - https://learn.microsoft.com/fabric/data-engineering/sql-analytics-endpoint-performance#optimizing-lakehouse-tables-for-querying-the-sql-analytics-endpoint
+          - https://learn.microsoft.com/fabric/data-warehouse/tutorial-conditional-lakehouse-optimization
+      12:  # "Optimize performance: Optimize a pipeline"
+        urls:
+          - https://learn.microsoft.com/fabric/data-factory/copy-activity-performance-and-scalability-guide
+      13:  # "Optimize performance: Optimize a data warehouse"
+        urls:
+          - https://learn.microsoft.com/fabric/data-warehouse/guidelines-warehouse-performance
+      14:  # "Optimize performance: Optimize Eventstreams and Eventhouses"
+        urls:
+          - https://learn.microsoft.com/fabric/real-time-intelligence/event-streams/configure-settings#event-throughput-setting
+          - https://learn.microsoft.com/fabric/real-time-intelligence/eventhouse-compute-observability
+      15:  # "Optimize performance: Optimize Spark performance"
+        urls:
+          - https://learn.microsoft.com/fabric/data-engineering/spark-monitoring-best-practices
+      16:  # "Optimize performance: Optimize query performance"
+        urls:
+          - https://learn.microsoft.com/fabric/data-warehouse/guidelines-warehouse-performance#query-performance

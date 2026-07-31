@@ -11,6 +11,14 @@ VENDOR_ICONS = {
 DEFAULT_ICON = "🎓"
 CARDS_PER_ROW = 3
 
+# Idioma: unica excepcion deliberada al namespacing por cert.slug (D12/D19) —
+# es una preferencia global elegida una sola vez en el Home, no un dato de
+# ninguna certificacion puntual. `frontend/quiz_page.py` la lee para decidir
+# el idioma de arranque de cualquier certificacion a la que se entre despues.
+LANGUAGE_LABELS = {"es": "Español", "en": "English"}
+GLOBAL_LANGUAGE_KEY = "global_language"
+DEFAULT_LANGUAGE = "es"
+
 
 @dataclass
 class HomeEntry:
@@ -83,8 +91,26 @@ def _render_card(entry: HomeEntry) -> None:
         )
 
 
+def _render_language_selector() -> None:
+    current = st.session_state.get(GLOBAL_LANGUAGE_KEY, DEFAULT_LANGUAGE)
+    options = list(LANGUAGE_LABELS.keys())
+    index = options.index(current) if current in options else 0
+    chosen = st.selectbox(
+        "Idioma",
+        options=options,
+        index=index,
+        format_func=lambda lang: LANGUAGE_LABELS.get(lang, lang),
+        key="home_language_widget",
+    )
+    st.session_state[GLOBAL_LANGUAGE_KEY] = chosen
+
+
 def render_home(entries: list[HomeEntry]) -> None:
-    st.title("Tutor de Certificaciones")
+    title_col, language_col = st.columns([4, 1])
+    with title_col:
+        st.title("Tutor de Certificaciones")
+    with language_col:
+        _render_language_selector()
     st.caption(
         "Practica para tus examenes de certificacion con preguntas fundamentadas "
         "en la documentacion oficial de cada proveedor. Elegi un tutor para empezar."
