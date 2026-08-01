@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import streamlit as st
 
 from tools.certifications import Certification
+from tools.email_report import is_valid_email
 from tools.question_bank import get_connection, init_schema, list_sections
 
 VENDOR_ICONS = {
@@ -18,6 +19,13 @@ CARDS_PER_ROW = 3
 LANGUAGE_LABELS = {"es": "Español", "en": "English"}
 GLOBAL_LANGUAGE_KEY = "global_language"
 DEFAULT_LANGUAGE = "es"
+
+# Correo: misma excepcion deliberada al namespacing por cert.slug que el
+# idioma — se pide una sola vez, al primer click en "Entrar" de CUALQUIER
+# tarjeta, y se recuerda para el resto de la sesion sin volver a preguntar
+# al entrar a otra certificacion. Opcional: dejarlo vacio no bloquea nada
+# (D22) — solo hace que el informe por correo del Simulacro no se envie.
+STUDENT_EMAIL_KEY = "student_email"
 
 
 @dataclass
@@ -72,6 +80,39 @@ def certification_home_entries(
     return entries
 
 
+def _render_entry_point(entry: HomeEntry) -> None:
+    """Si ya tenemos el correo del alumno (de esta sesion, cualquier
+    certificacion), "Entrar" es un link directo como siempre. Si no, el
+    primer click en CUALQUIER tarjeta pide el correo (opcional) antes de
+    entrar — una sola vez por sesion, ver STUDENT_EMAIL_KEY arriba."""
+    if st.session_state.get(STUDENT_EMAIL_KEY):
+        st.page_link(
+            entry.page,
+            label="Entrar",
+            icon=":material/arrow_forward:",
+            use_container_width=True,
+        )
+        return
+
+    with st.form(key=f"email_gate_{entry.slug}", border=False):
+        email = st.text_input(
+            "Tu correo (opcional, para el informe del Simulacro)",
+            key=f"email_gate_input_{entry.slug}",
+            placeholder="tu@correo.com",
+        )
+        submitted = st.form_submit_button(
+            "Entrar", icon=":material/arrow_forward:", use_container_width=True
+        )
+    if submitted:
+        stripped = email.strip()
+        if stripped and not is_valid_email(stripped):
+            st.error("Ese correo no parece valido — dejalo vacio si preferis no darlo.")
+            return
+        if stripped:
+            st.session_state[STUDENT_EMAIL_KEY] = stripped
+        st.switch_page(entry.page)
+
+
 def _render_card(entry: HomeEntry) -> None:
     with st.container(border=True):
         st.markdown(f"#### {entry.icon} {entry.display_name}")
@@ -83,12 +124,7 @@ def _render_card(entry: HomeEntry) -> None:
         if entry.badge:
             st.caption(entry.badge)
 
-        st.page_link(
-            entry.page,
-            label="Entrar",
-            icon=":material/arrow_forward:",
-            use_container_width=True,
-        )
+        _render_entry_point(entry)
 
 
 def _render_language_selector() -> None:

@@ -4,8 +4,9 @@ import pandas as pd
 import streamlit as st
 
 from app import answer_question, get_available_languages, get_available_sections, open_bank, open_progress
-from frontend.home import DEFAULT_LANGUAGE, GLOBAL_LANGUAGE_KEY, LANGUAGE_LABELS
+from frontend.home import DEFAULT_LANGUAGE, GLOBAL_LANGUAGE_KEY, LANGUAGE_LABELS, STUDENT_EMAIL_KEY
 from tools.certifications import Certification
+from tools.email_report import build_exam_report_email, is_email_configured, send_email
 from tools.progress_store import (
     get_exam_attempt_answers,
     get_weak_topics,
@@ -272,6 +273,7 @@ def render_quiz(cert: Certification) -> None:
             "start_time": datetime.now(timezone.utc),
             "finished": False,
             "recorded": False,
+            "email_sent": False,
         }
 
     def render_exam_results(exam: dict) -> None:
@@ -281,6 +283,8 @@ def render_quiz(cert: Certification) -> None:
         score = sum(1 for i, q in enumerate(questions) if answers.get(i) == q["correct_option_index"])
 
         if not exam["recorded"]:
+            finished_at = datetime.now(timezone.utc)
+            exam["finished_at"] = finished_at
             for i, q in enumerate(questions):
                 if answers.get(i) is not None:
                     answer_question(progress_conn, q, answers[i])
@@ -291,7 +295,7 @@ def render_quiz(cert: Certification) -> None:
                     score=score,
                     total=total,
                     started_at=exam["start_time"],
-                    finished_at=datetime.now(timezone.utc),
+                    finished_at=finished_at,
                 )
                 record_exam_attempt_answers(
                     progress_conn,
@@ -308,6 +312,32 @@ def render_quiz(cert: Certification) -> None:
                 )
             exam["recorded"] = True
 
+        # Informe por correo: se intenta una sola vez (guardado en `email_sent`,
+        # separado de `recorded`) para no reintentar en cada rerun (ej. al abrir
+        # un expander de la revision) ni spamear un SMTP roto. No bloquea nada
+        # si no hay correo o no esta configurado — ver docs/contexto/decisiones.md D22.
+        if not exam["email_sent"] and total:
+            exam["email_sent"] = True
+            student_email = st.session_state.get(STUDENT_EMAIL_KEY)
+            if not student_email:
+                exam["email_status"] = "no_email"
+            elif not is_email_configured():
+                exam["email_status"] = "not_configured"
+            else:
+                subject, text_body, html_body = build_exam_report_email(
+                    cert_display_name=cert.display_name,
+                    language=exam["language"],
+                    score=score,
+                    total=total,
+                    passing_threshold=PASSING_THRESHOLD,
+                    elapsed=exam["finished_at"] - exam["start_time"],
+                    finished_at_label=exam["finished_at"].strftime("%Y-%m-%d %H:%M UTC"),
+                    questions=questions,
+                    answers=answers,
+                )
+                ok = send_email(student_email, subject, text_body, html_body)
+                exam["email_status"] = "sent" if ok else "failed"
+
         accuracy = score / total if total else 0.0
 
         st.subheader("Resultado del simulacro")
@@ -323,6 +353,14 @@ def render_quiz(cert: Certification) -> None:
             f"{PASSING_THRESHOLD:.0%}. Usa este resultado como referencia de progreso, no como "
             "veredicto oficial."
         )
+
+        email_status = exam.get("email_status")
+        if email_status == "no_email":
+            st.caption("💡 Agrega tu correo desde el Inicio para recibir este resultado por email la proxima vez.")
+        elif email_status == "sent":
+            st.caption(f"📧 Informe enviado a {st.session_state.get(STUDENT_EMAIL_KEY)}.")
+        elif email_status == "failed":
+            st.warning("No se pudo enviar el informe por correo esta vez — podes seguir revisando el resultado aqui abajo.")
 
         if st.button("Nuevo simulacro", key=_k("new_exam_button")):
             st.session_state.pop(_k("exam"), None)
