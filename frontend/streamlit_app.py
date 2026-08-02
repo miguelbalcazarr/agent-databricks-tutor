@@ -8,7 +8,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 load_dotenv(REPO_ROOT / ".env")
 
-from frontend.home import certification_home_entries, make_home_page
+from frontend.home import certification_home_entries, make_changelog_page, make_home_page
 from frontend.quiz_page import make_quiz_page
 from tools.certifications import load_registry
 
@@ -22,8 +22,9 @@ quiz_pages = {cert.slug: make_quiz_page(cert) for cert in certifications}
 # otra fuente de entries + paginas aca, sin tocar frontend/home.py — ver
 # docs/contexto/decisiones.md D19.
 home_entries = certification_home_entries(certifications, quiz_pages)
-all_pages = list(quiz_pages.values())
+changelog_page = make_changelog_page()
+all_pages = list(quiz_pages.values()) + [changelog_page]
 
-home_page = make_home_page(home_entries)
+home_page = make_home_page(home_entries, changelog_page)
 
 st.navigation([home_page] + all_pages).run()

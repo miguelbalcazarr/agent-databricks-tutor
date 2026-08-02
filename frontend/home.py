@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 import streamlit as st
 
@@ -11,6 +12,12 @@ VENDOR_ICONS = {
 }
 DEFAULT_ICON = "🎓"
 CARDS_PER_ROW = 3
+
+# CHANGELOG.md (raiz del repo) es de cara al alumno — novedades relevantes en
+# espanol simple, no confundir con docs/contexto/decisiones.md (de cara al
+# desarrollo). Se linkea desde el Inicio, ver docs/contexto/decisiones.md D24.
+REPO_ROOT = Path(__file__).resolve().parent.parent
+CHANGELOG_PATH = REPO_ROOT / "CHANGELOG.md"
 
 # Idioma: unica excepcion deliberada al namespacing por cert.slug (D12/D19) —
 # es una preferencia global elegida una sola vez en el Home, no un dato de
@@ -141,7 +148,7 @@ def _render_language_selector() -> None:
     st.session_state[GLOBAL_LANGUAGE_KEY] = chosen
 
 
-def render_home(entries: list[HomeEntry]) -> None:
+def render_home(entries: list[HomeEntry], changelog_page: st.Page) -> None:
     title_col, language_col = st.columns([4, 1])
     with title_col:
         st.title("Tutor de Certificaciones")
@@ -160,12 +167,36 @@ def render_home(entries: list[HomeEntry]) -> None:
             with column:
                 _render_card(entry)
 
+    st.divider()
+    st.page_link(changelog_page, label="Novedades / Changelog", icon=":material/history:")
 
-def make_home_page(entries: list[HomeEntry]) -> st.Page:
+
+def render_changelog() -> None:
+    st.title("Novedades")
+    if CHANGELOG_PATH.exists():
+        st.markdown(CHANGELOG_PATH.read_text(encoding="utf-8"))
+    else:
+        st.info("Todavia no hay novedades registradas.")
+
+
+def make_home_page(entries: list[HomeEntry], changelog_page: st.Page) -> st.Page:
     return st.Page(
-        lambda: render_home(entries),
+        lambda: render_home(entries, changelog_page),
         title="Inicio",
         icon=":material/home:",
         url_path="home",
         default=True,
+    )
+
+
+def make_changelog_page() -> st.Page:
+    """Pagina oculta del menu de navegacion (visibility='hidden') — solo se
+    llega ahi via el link explicito del Inicio, no como item propio del
+    sidebar (que ya tiene una entrada por certificacion)."""
+    return st.Page(
+        render_changelog,
+        title="Novedades",
+        icon=":material/history:",
+        url_path="novedades",
+        visibility="hidden",
     )
