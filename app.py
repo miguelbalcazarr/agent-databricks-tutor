@@ -1,15 +1,20 @@
 import os
 import sqlite3
+from pathlib import Path
 
-from tools.certifications import Certification, get_certification
-from tools.progress_store import get_connection_for_student, get_weak_topics, init_schema as init_progress_schema, record_attempt
-from tools.question_bank import (
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parent / ".env")
+
+from tools.certifications import Certification, get_certification  # noqa: E402
+from tools.progress_store import get_connection_for_student, get_weak_topics, init_schema as init_progress_schema, record_attempt  # noqa: E402
+from tools.question_bank import (  # noqa: E402
     get_connection as get_bank_connection,
     init_schema as init_bank_schema,
     list_languages,
     list_sections,
 )
-from tools.quiz_engine import grade_answer, pick_question
+from tools.quiz_engine import grade_answer, pick_question  # noqa: E402
 
 DEFAULT_LANGUAGE = "es"
 DEFAULT_CERTIFICATION = "databricks-data-engineer-associate"

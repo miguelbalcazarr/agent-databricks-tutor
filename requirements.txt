@@ -3,3 +3,4 @@ streamlit
 pandas
 pypdf
 pyyaml
+python-dotenv

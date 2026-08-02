@@ -22,8 +22,11 @@ from dataclasses import asdict
 from pathlib import Path
 
 import yaml
+from dotenv import load_dotenv
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
+load_dotenv(REPO_ROOT / ".env")
 
 from agent.client import generate_question_with_ai  # noqa: E402
 from agent.prompts import build_system_prompt  # noqa: E402
