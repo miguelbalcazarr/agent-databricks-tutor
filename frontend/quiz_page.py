@@ -6,7 +6,7 @@ import streamlit as st
 from app import answer_question, get_available_languages, get_available_sections, open_bank, open_progress
 from frontend.home import DEFAULT_LANGUAGE, GLOBAL_LANGUAGE_KEY, LANGUAGE_LABELS, STUDENT_EMAIL_KEY
 from tools.certifications import Certification
-from tools.email_report import build_exam_report_email, is_email_configured, send_email
+from tools.email_report import build_exam_report_email, build_exam_report_pdf, is_email_configured, send_email
 from tools.progress_store import (
     get_exam_attempt_answers,
     get_weak_topics,
@@ -324,7 +324,7 @@ def render_quiz(cert: Certification) -> None:
             elif not is_email_configured():
                 exam["email_status"] = "not_configured"
             else:
-                subject, text_body, html_body = build_exam_report_email(
+                report_kwargs = dict(
                     cert_display_name=cert.display_name,
                     language=exam["language"],
                     score=score,
@@ -335,7 +335,12 @@ def render_quiz(cert: Certification) -> None:
                     questions=questions,
                     answers=answers,
                 )
-                ok = send_email(student_email, subject, text_body, html_body)
+                subject, text_body, html_body = build_exam_report_email(**report_kwargs)
+                pdf_bytes = build_exam_report_pdf(**report_kwargs)
+                ok = send_email(
+                    student_email, subject, text_body, html_body,
+                    attachment_bytes=pdf_bytes, attachment_filename=f"simulacro_{cert.slug}.pdf",
+                )
                 exam["email_status"] = "sent" if ok else "failed"
 
         accuracy = score / total if total else 0.0

@@ -1,10 +1,17 @@
 import sys
 from datetime import timedelta
+from email import message_from_string
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from tools.email_report import build_exam_report_email, is_email_configured, is_valid_email, send_email
+from tools.email_report import (
+    build_exam_report_email,
+    build_exam_report_pdf,
+    is_email_configured,
+    is_valid_email,
+    send_email,
+)
 
 _QUESTIONS = [
     {
@@ -92,6 +99,64 @@ def test_build_exam_report_email_marks_unanswered_questions():
     assert "Sin responder" in text_body
 
 
+def test_build_exam_report_pdf_returns_valid_pdf_bytes():
+    pdf_bytes = build_exam_report_pdf(
+        cert_display_name="Databricks Certified Data Engineer Associate",
+        language="es",
+        score=1,
+        total=2,
+        passing_threshold=0.8,
+        elapsed=timedelta(minutes=12, seconds=34),
+        finished_at_label="2026-07-31 10:00 UTC",
+        questions=_QUESTIONS,
+        answers={0: 1, 1: 1},
+    )
+    assert isinstance(pdf_bytes, bytes)
+    assert pdf_bytes.startswith(b"%PDF")
+    assert len(pdf_bytes) > 500
+
+
+def test_build_exam_report_pdf_handles_unanswered_questions_without_crashing():
+    pdf_bytes = build_exam_report_pdf(
+        cert_display_name="Cert",
+        language="es",
+        score=0,
+        total=2,
+        passing_threshold=0.8,
+        elapsed=timedelta(minutes=1),
+        finished_at_label="2026-07-31 10:00 UTC",
+        questions=_QUESTIONS,
+        answers={0: None, 1: None},
+    )
+    assert pdf_bytes.startswith(b"%PDF")
+
+
+def test_build_exam_report_pdf_survives_characters_outside_latin1():
+    weird_question = [
+        {
+            "id": 1,
+            "section_number": 1,
+            "section_name": "Seccion rara",
+            "scenario_text": "Escenario con caracteres raros: 中文 emoji 🚀",
+            "options": ["A", "B"],
+            "correct_option_index": 0,
+            "explanation": "Explicacion.",
+        }
+    ]
+    pdf_bytes = build_exam_report_pdf(
+        cert_display_name="Cert",
+        language="es",
+        score=1,
+        total=1,
+        passing_threshold=0.8,
+        elapsed=timedelta(minutes=1),
+        finished_at_label="2026-07-31 10:00 UTC",
+        questions=weird_question,
+        answers={0: 0},
+    )
+    assert pdf_bytes.startswith(b"%PDF")
+
+
 def test_send_email_returns_false_without_config_and_never_touches_network(monkeypatch):
     monkeypatch.delenv("SMTP_HOST", raising=False)
     monkeypatch.delenv("SMTP_USER", raising=False)
@@ -158,6 +223,50 @@ def test_send_email_success_path_uses_starttls_for_non_ssl_port(monkeypatch):
     sender, recipients, message = _FakeSMTP.sent[0]
     assert recipients == ["alumno@example.com"]
     assert "asunto" in message
+
+
+def test_send_email_with_attachment_includes_pdf_part(monkeypatch):
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("SMTP_PORT", "587")
+    monkeypatch.setenv("SMTP_USER", "bot@example.com")
+    monkeypatch.setenv("SMTP_PASSWORD", "secret")
+    _FakeSMTP.sent = []
+    monkeypatch.setattr("smtplib.SMTP", _FakeSMTP)
+
+    fake_pdf = b"%PDF-1.3\n%fake pdf content for testing\n"
+    ok = send_email(
+        "alumno@example.com", "asunto", "texto plano", "<p>html</p>",
+        attachment_bytes=fake_pdf, attachment_filename="simulacro_test.pdf",
+    )
+
+    assert ok is True
+    assert len(_FakeSMTP.sent) == 1
+    _, recipients, raw_message = _FakeSMTP.sent[0]
+    assert recipients == ["alumno@example.com"]
+
+    parsed = message_from_string(raw_message)
+    pdf_parts = [p for p in parsed.walk() if p.get_content_type() == "application/pdf"]
+    assert len(pdf_parts) == 1
+    assert pdf_parts[0].get_filename() == "simulacro_test.pdf"
+    assert pdf_parts[0].get_payload(decode=True) == fake_pdf
+
+    text_parts = [p for p in parsed.walk() if p.get_content_type() == "text/plain"]
+    assert len(text_parts) == 1
+
+
+def test_send_email_without_attachment_has_no_pdf_part(monkeypatch):
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("SMTP_USER", "bot@example.com")
+    monkeypatch.setenv("SMTP_PASSWORD", "secret")
+    _FakeSMTP.sent = []
+    monkeypatch.setattr("smtplib.SMTP", _FakeSMTP)
+
+    send_email("alumno@example.com", "asunto", "texto", "<p>html</p>")
+
+    _, _, raw_message = _FakeSMTP.sent[0]
+    parsed = message_from_string(raw_message)
+    pdf_parts = [p for p in parsed.walk() if p.get_content_type() == "application/pdf"]
+    assert len(pdf_parts) == 0
 
 
 class _RaisingSMTP:

@@ -4,3 +4,4 @@ pandas
 pypdf
 pyyaml
 python-dotenv
+fpdf2
