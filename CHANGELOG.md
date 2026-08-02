@@ -1,8 +1,3 @@
-Novedades para vos, alumno, sobre el Tutor de Certificaciones — orden del
-cambio más reciente al más antiguo. (Para el detalle técnico de cada
-decisión ver `docs/contexto/decisiones.md`, pensado para el desarrollo, no
-para esta lectura.)
-
 ## 2026-08-02
 
 - 📄 El informe del Simulacro que te llega por correo ahora también incluye
