@@ -232,3 +232,7 @@ data/docs_cache/
 # dejo de versionarse tras exponer credenciales/PII reales varias veces en un repo publico —
 # queda solo local, ya no se sincroniza via git (ver docs/contexto/decisiones.md)
 docs/
+
+# agent-databricks-tutor: CLAUDE.md referencia docs/contexto/ (ya local-only, ver arriba) —
+# mismo criterio, queda solo local
+CLAUDE.md
