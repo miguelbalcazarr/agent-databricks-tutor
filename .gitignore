@@ -236,3 +236,7 @@ docs/
 # agent-databricks-tutor: CLAUDE.md referencia docs/contexto/ (ya local-only, ver arriba) —
 # mismo criterio, queda solo local
 CLAUDE.md
+
+# agent-databricks-tutor: config de GitHub Codespaces sin uso real (nada del repo la referencia,
+# no es una opcion documentada para el alumno en README.md/D25) — repo mas limpio para el alumno
+.devcontainer/
