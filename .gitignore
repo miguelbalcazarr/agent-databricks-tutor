@@ -227,3 +227,8 @@ data/docs_cache/
 # por procesos de Streamlit zombies durante el refactor a multi-certificacion — borrar a mano
 # cuando se puedan cerrar esas terminales (ver docs/contexto/errores-conocidos.md E06)
 /data/question_bank.db
+
+# agent-databricks-tutor: docs/contexto (arquitectura, decisiones, errores-conocidos, etc.)
+# dejo de versionarse tras exponer credenciales/PII reales varias veces en un repo publico —
+# queda solo local, ya no se sincroniza via git (ver docs/contexto/decisiones.md)
+docs/
