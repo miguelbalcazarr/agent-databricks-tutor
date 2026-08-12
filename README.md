@@ -13,17 +13,9 @@ Certificaciones disponibles hoy:
 
 Ver [CHANGELOG.md](CHANGELOG.md) para las últimas novedades.
 
-## Opción 1: usar la app ya publicada (recomendado, sin instalar nada)
+## Cómo correrlo
 
-**App publicada:** https://agents-xitnacpvmribpyavkkpgmg.streamlit.app/
-
-Entrá, elegí tu certificación e idioma, y listo. No necesitás cuenta ni
-API key. Funciona directo desde el navegador.
-
-## Opción 2: correrlo en tu propia máquina
-
-Útil si preferís tenerlo local, sin depender de que la app publicada esté
-disponible. Requiere **Python 3.11 o superior** y `git`.
+Requiere **Python 3.11 o superior** y `git`.
 
 ```bash
 git clone https://github.com/miguelbalcazarr/agent-databricks-tutor.git
