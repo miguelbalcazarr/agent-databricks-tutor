@@ -13,6 +13,7 @@ from tools.question_bank import (
     insert_question,
     list_languages,
     list_sections,
+    shuffle_options,
     validate_question,
 )
 
@@ -187,6 +188,25 @@ def test_delete_question_removes_it(tmp_path):
     delete_question(conn, question_id)
 
     assert get_question(conn, question_id) is None
+
+
+def test_shuffle_options_preserves_the_correct_option_content():
+    options = ["Opcion A", "Opcion B", "Opcion C", "Opcion D"]
+    correct_index = 0
+
+    shuffled_options, new_correct_index = shuffle_options(options, correct_index)
+
+    assert sorted(shuffled_options) == sorted(options)
+    assert shuffled_options[new_correct_index] == "Opcion A"
+
+
+def test_shuffle_options_varies_the_correct_position_over_many_runs():
+    positions = {
+        shuffle_options(["A", "B", "C", "D"], 0)[1]
+        for _ in range(200)
+    }
+
+    assert positions == {0, 1, 2, 3}
 
 
 def test_validate_question_flags_missing_fields():

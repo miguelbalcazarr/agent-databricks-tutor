@@ -9,6 +9,7 @@ filas independientes por objetivo, no como traduccion literal una de otra.
 from __future__ import annotations
 
 import json
+import random
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -85,6 +86,19 @@ def validate_question(parsed: dict) -> tuple[bool, list[str]]:
         errors.append("explanation vacia")
 
     return (len(errors) == 0, errors)
+
+
+def shuffle_options(options: list[str], correct_index: int) -> tuple[list[str], int]:
+    """Mezcla el orden de las opciones y devuelve el nuevo indice de la
+    correcta. El LLM tiende a poner la respuesta correcta siempre en la
+    misma posicion (ver docs/contexto/decisiones.md D27) — esto se aplica
+    SIEMPRE antes de guardar una pregunta, sin confiar en que el prompt por
+    si solo alcance para variar la posicion."""
+    order = list(range(len(options)))
+    random.shuffle(order)
+    shuffled_options = [options[i] for i in order]
+    new_correct_index = order.index(correct_index)
+    return shuffled_options, new_correct_index
 
 
 def insert_question(

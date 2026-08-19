@@ -39,6 +39,7 @@ from tools.question_bank import (  # noqa: E402
     get_connection,
     init_schema,
     insert_question,
+    shuffle_options,
     validate_question,
 )
 
@@ -129,6 +130,9 @@ def process_objective(
                 ok_overall = False
                 continue
 
+            shuffled_options, shuffled_correct_index = shuffle_options(
+                parsed["options"], parsed["correct_index"]
+            )
             question_id = insert_question(
                 conn,
                 section_number=section.number,
@@ -137,8 +141,8 @@ def process_objective(
                 objective_text=objective_text,
                 language=language,
                 scenario_text=parsed["scenario"],
-                options=parsed["options"],
-                correct_option_index=parsed["correct_index"],
+                options=shuffled_options,
+                correct_option_index=shuffled_correct_index,
                 explanation=parsed["explanation"],
                 source_urls=urls,
                 generation_model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),

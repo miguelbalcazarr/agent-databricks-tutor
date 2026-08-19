@@ -1,3 +1,9 @@
+## 2026-08-18
+
+- 🎯 Corregido: la respuesta correcta casi siempre caía en la opción A. Ahora
+  su posición es aleatoria en todas las preguntas del banco, en Práctica y
+  en Simulacro.
+
 ## 2026-08-02
 
 - 📄 El informe del Simulacro que te llega por correo ahora también incluye
